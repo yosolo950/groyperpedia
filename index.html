@@ -1,21 +1,78 @@
- <!DOCTYPE html>
- <html lang="en">
- <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="css/styles.css">
-    <title>Gyoperpedia</title>
- </head>
- <body>
-    <div class="wrapper centered">
-      <div class="inner">
-         <div class="logo">
-            <img src="logo.png" class="logo-img" alt="Gyoperpedia Logo" width="100" height="100">
-         </div>
-         <div class="search-bar">
-            <input type="text" class="search-input" placeholder="Search for a topic..." id="search-input">
-         </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <title>Groyperpedia</title>
+</head>
+<body>
+  <div class="wrapper centered" id="wrapper">
+    <div class="inner" id="search-container">
+      <div class="logo centered" id="logo">
+        <img src="logo.png" class="logo-img" alt="Gyoperpedia Logo" width="100" height="100"/>
+      </div>
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search for a topic..." id="search-input"/>
       </div>
     </div>
- </body>
- </html>
+  </div>
+
+  <div id="article-container" class="hidden"></div>
+
+  <script>
+    const searchInput = document.getElementById("search-input");
+    const articleContainer = document.getElementById("article-container");
+    const wrapper = document.getElementById("wrapper");
+    const searchContainer = document.getElementById("search-container");
+
+    async function fetchEntry(query) {
+      const res = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`);
+      return res.json();
+    }
+
+    function displayArticle(data) {
+      articleContainer.innerHTML = "";
+
+      if (!data.found) {
+        articleContainer.innerHTML = `<h2>No results found</h2>`;
+        return;
+      }
+
+      const titleEl = document.createElement("h1");
+      titleEl.textContent = data.title;
+
+      const subtitleEl = document.createElement("h3");
+      subtitleEl.textContent = data.subtitle;
+
+      articleContainer.appendChild(titleEl);
+      articleContainer.appendChild(subtitleEl);
+
+      for (const [heading, paragraph] of Object.entries(data.content)) {
+        const sectionHeading = document.createElement("h2");
+        sectionHeading.textContent = heading;
+
+        const sectionParagraph = document.createElement("p");
+        sectionParagraph.textContent = paragraph;
+
+        articleContainer.appendChild(sectionHeading);
+        articleContainer.appendChild(sectionParagraph);
+      }
+    }
+
+    searchInput.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        const data = await fetchEntry(query);
+        displayArticle(data);
+
+        // Move search bar to corner
+        wrapper.classList.add("shrink");
+        articleContainer.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
